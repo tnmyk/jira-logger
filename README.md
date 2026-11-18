@@ -19,6 +19,12 @@ npm run dev
 
 Open the URL printed by Astro. The default is <http://localhost:3000>.
 
+For the same server with `.env` support and foreground process handling:
+
+```bash
+npm run start
+```
+
 The dev server binds `127.0.0.1` by default. To expose it on the LAN:
 
 ```bash
@@ -34,6 +40,62 @@ npm run dev:status
 npm run dev:logs
 npm run dev:stop
 ```
+
+## Run on boot (Rocky Linux)
+
+The UI and the Jira proxy are one Astro process. There is no separate app server to start.
+
+The installer creates a **systemd user service**, enables it, and tries to enable lingering so it starts when the machine boots:
+
+```bash
+npm install
+./scripts/install-service.sh
+```
+
+If the installer could not enable lingering, run this once:
+
+```bash
+sudo loginctl enable-linger "$USER"
+```
+
+Lingering lets the user service start at boot without requiring a desktop login.
+
+Useful commands:
+
+```bash
+systemctl --user status jira-logger
+systemctl --user restart jira-logger
+systemctl --user stop jira-logger
+journalctl --user -u jira-logger -f
+```
+
+The default URL is <http://127.0.0.1:3000>. The installer creates `.env` from `.env.example`; change `HOST` or `PORT` there and restart the service.
+
+For access from another machine, prefer an SSH tunnel:
+
+```bash
+ssh -L 3000:127.0.0.1:3000 user@your-rocky-host
+```
+
+Then open <http://127.0.0.1:3000> locally. If you must expose the port directly, set `HOST=0.0.0.0` in `.env`, open the port in `firewalld`, and use only a trusted network. This is a development server over plain HTTP, not a production deployment.
+
+After updating the app:
+
+```bash
+git pull
+npm install
+systemctl --user restart jira-logger
+```
+
+If Node.js is managed by `nvm`, rerun `./scripts/install-service.sh` after switching Node versions so the service picks up the new `PATH`.
+
+Remove the service with:
+
+```bash
+./scripts/uninstall-service.sh
+```
+
+The mock Jira server is not part of this service; start it separately with `npm run mock` when testing.
 
 ## Connect Jira
 
@@ -168,7 +230,7 @@ This is a local utility. The Jira token has whatever permissions your account ha
 
 ## Not included
 
-- Deployment, Docker, systemd, Lambda, or EC2 setup
+- Deployment, Docker, Lambda, or EC2 setup
 - App accounts, cookies, sessions, or CSRF layer
 - Database or shared team configuration
 - Jira Server/Data Center
