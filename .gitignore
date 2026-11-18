@@ -1,0 +1,33 @@
+# dependencies
+node_modules/
+
+# builds and generated output
+dist/
+.astro/
+*.tsbuildinfo
+
+# environment and secrets
+.env
+.env.*
+!.env.example
+
+# local app data
+data/
+.artifacts/
+
+# tests and reports
+coverage/
+playwright-report/
+test-results/
+
+# editor and OS files
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# logs
+*.log
+npm-debug.log*
